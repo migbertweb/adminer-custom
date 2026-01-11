@@ -4,25 +4,23 @@ USER root
 
 # Install MongoDB extension dependencies and the extension itself
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS openssl-dev \
-    && pecl install mongodb \
-    && docker-php-ext-enable mongodb \
-    && apk del .build-deps \
-    && apk add --no-cache libssl3 libcrypto3
+    && pecl install mongodb     && docker-php-ext-enable mongodb     && apk del .build-deps     && apk add --no-cache libssl3 libcrypto3
 
 # Copy Dracula theme
 COPY --chown=adminer:adminer adminer.css /var/www/html/adminer.css
 
-# Copy extra plugins
-COPY --chown=adminer:adminer plugins/favorite-query.php /var/www/html/plugins/favorite-query.php
+# Copy all plugins from the local directory to the container
+COPY --chown=adminer:adminer plugins/ /var/www/html/plugins/
 
-# Create plugins-enabled directory and manually enable plugins/drivers to ensure they load correctly.
-# We load the MongoDB driver inside the first plugin loader to avoid adding invalid objects to the $plugins array.
+# Use the official environment variable for standard plugins.
+# The entrypoint script will automatically generate the loaders for these.
+ENV ADMINER_PLUGINS="config favorite-query foreign-system"
+
+# Manually enable the MongoDB driver because the official plugin-loader.php 
+# refuses to load files from subdirectories (like drivers/mongo.php).
+# We MUST return an object (like stdClass) to avoid "TypeError" in Adminer's constructor.
 RUN mkdir -p /var/www/html/plugins-enabled \
-    && echo "<?php require_once('plugins/drivers/mongo.php'); require_once('plugins/config.php'); return new AdminerConfig();" > /var/www/html/plugins-enabled/001-config.php \
-    && echo "<?php require_once('plugins/favorite-query.php'); return new AdminerFavoriteQuery();" > /var/www/html/plugins-enabled/002-favorite-query.php \
+    && echo "<?php require_once('plugins/drivers/mongo.php'); return new stdClass();" > /var/www/html/plugins-enabled/000-mongo.php \
     && chown -R adminer:adminer /var/www/html/plugins-enabled
-
-# Set ADMINER_PLUGINS empty because we load them manually
-ENV ADMINER_PLUGINS=""
 
 USER adminer

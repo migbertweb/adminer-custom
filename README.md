@@ -10,6 +10,7 @@ Esta es una imagen personalizada de [Adminer](https://www.adminer.org/) diseñad
 - **Plugins Incluidos**:
   - `config`: Permite guardar configuraciones (como el diseño) en cookies.
   - `favorite-query`: Permite guardar tus consultas SQL favoritas en el almacenamiento local del navegador.
+  - `foreign-system`: Vincula tablas del sistema mediante claves foráneas virtuales.
 - **Optimizado**: Configuración limpia mediante cargadores manuales para evitar errores de interfaz y asegurar que todos los componentes se registren correctamente.
 
 ## Requisitos
